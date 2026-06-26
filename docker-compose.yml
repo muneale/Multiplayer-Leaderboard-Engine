@@ -191,6 +191,29 @@ services:
       timeout: 5s
       retries: 5
 
+  apisix:
+    image: apache/apisix:3.9.1-debian
+    ports:
+      - "8080:9080"
+    volumes:
+      - ./gateway/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./gateway/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+    depends_on:
+      player-service:
+        condition: service_healthy
+      score-service:
+        condition: service_healthy
+      query-service:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:9080"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
 volumes:
   postgres_data:
   kafka_data:
