@@ -1,0 +1,17 @@
+# Test files have no place in the production image
+*_test.go
+
+# Version control
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Documentation
+*.md
+
+# Local env overrides
+.env
+.env.*

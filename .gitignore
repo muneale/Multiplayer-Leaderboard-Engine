@@ -1,0 +1,31 @@
+# Build output
+bin/
+dist/
+
+# Go test artifacts
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Go workspace files (local multi-module experiments)
+go.work
+go.work.sum
+
+# Vendored dependencies (not used in this project)
+vendor/
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# OS noise
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Docker named volumes mounted locally
+.docker/
