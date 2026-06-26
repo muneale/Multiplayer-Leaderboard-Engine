@@ -1,0 +1,80 @@
+routes:
+  # Player Service — CRUD operations on players
+  - id: 1
+    uri: /players*
+    methods:
+      - GET
+      - POST
+    upstream:
+      type: roundrobin
+      nodes:
+        "player-service:3001": 1
+    plugins:
+      request-id:
+        header_name: X-Request-ID
+        include_in_response: true
+        algorithm: uuid
+      opentelemetry:
+        sampler:
+          name: always_on
+
+  # Score Service — submit a score (rate-limited: 100k req/min per IP)
+  - id: 2
+    uri: /scores
+    methods:
+      - POST
+    upstream:
+      type: roundrobin
+      nodes:
+        "score-service:3002": 1
+    plugins:
+      request-id:
+        header_name: X-Request-ID
+        include_in_response: true
+        algorithm: uuid
+      opentelemetry:
+        sampler:
+          name: always_on
+      limit-count:
+        count: 100000
+        time_window: 60
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+        rejected_msg: '{"error":"rate limit exceeded"}'
+        policy: local
+
+  # Score Service — health check (not rate-limited)
+  - id: 3
+    uri: /scores/health
+    methods:
+      - GET
+    upstream:
+      type: roundrobin
+      nodes:
+        "score-service:3002": 1
+    plugins:
+      request-id:
+        header_name: X-Request-ID
+        include_in_response: true
+        algorithm: uuid
+
+  # Query Service — leaderboard reads
+  - id: 4
+    uri: /leaderboard*
+    methods:
+      - GET
+    upstream:
+      type: roundrobin
+      nodes:
+        "query-service:3004": 1
+    plugins:
+      request-id:
+        header_name: X-Request-ID
+        include_in_response: true
+        algorithm: uuid
+      opentelemetry:
+        sampler:
+          name: always_on
+
+#END
