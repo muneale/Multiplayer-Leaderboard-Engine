@@ -151,6 +151,46 @@ services:
       timeout: 5s
       retries: 5
 
+  query-service:
+    build:
+      context: ./services/query-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: "3004"
+      REDIS_ADDR: "redis:6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector:4317"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3004/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  snapshot-service:
+    build:
+      context: ./services/snapshot-service
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: "3005"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/leaderboard?sslmode=disable"
+      REDIS_ADDR: "redis:6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector:4317"
+      SNAPSHOT_INTERVAL_SECONDS: "300"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   kafka_data:

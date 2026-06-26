@@ -35,6 +35,12 @@
               "key": "gameId",
               "value": "",
               "type": "local"
+            },
+            {
+              "isChecked": true,
+              "key": "queryBaseUrl",
+              "value": "localhost:3004",
+              "type": "local"
             }
           ],
           "$loki": 2

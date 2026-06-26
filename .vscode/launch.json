@@ -88,6 +88,54 @@
       "program": "${workspaceFolder}/services/ranking-service/internal/ranking",
       "cwd": "${workspaceFolder}/services/ranking-service",
       "args": ["-v", "-count=1"]
+    },
+    {
+      "name": "query-service",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/services/query-service/cmd",
+      "cwd": "${workspaceFolder}/services/query-service",
+      "env": {
+        "PORT": "3004",
+        "REDIS_ADDR": "localhost:6379",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317"
+      },
+      "preLaunchTask": "infra: start"
+    },
+    {
+      "name": "query-service: unit tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/query-service/internal/handler",
+      "cwd": "${workspaceFolder}/services/query-service",
+      "args": ["-v", "-count=1"]
+    },
+    {
+      "name": "snapshot-service",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/services/snapshot-service/cmd",
+      "cwd": "${workspaceFolder}/services/snapshot-service",
+      "env": {
+        "PORT": "3005",
+        "DATABASE_URL": "postgres://postgres:postgres@localhost:5432/leaderboard?sslmode=disable",
+        "REDIS_ADDR": "localhost:6379",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317",
+        "SNAPSHOT_INTERVAL_SECONDS": "30"
+      },
+      "preLaunchTask": "infra: start"
+    },
+    {
+      "name": "snapshot-service: unit tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/snapshot-service/internal/snapshotter",
+      "cwd": "${workspaceFolder}/services/snapshot-service",
+      "args": ["-v", "-count=1"]
     }
   ]
 }
