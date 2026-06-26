@@ -1,1 +1,498 @@
-{"filename":"/Users/muneale/Documents/projects/mune/Multiplayer-Leaderboard-Engine/flashpost/Flashpost-tests/flashpost.db","collections":[{"name":"apiRequests","data":[{"id":"b844016d-0bd9-41cc-ac4e-b84111e05246","url":"{{baseUrl}}/health","name":"Health Check","createdTime":"26-Jun-2026 15:42:46","method":"get","params":[{"isChecked":false,"key":"","value":""}],"pathParams":[],"auth":{"authType":"noauth","userName":"","password":"","addTo":"queryparams","showPwd":false,"tokenPrefix":"","aws":{"service":"","region":"","accessKey":"","secretAccessKey":"","sessionToken":""}},"headers":[{"key":"Accept","value":"*/*","isChecked":true},{"key":"User-Agent","value":"Flashpost","isChecked":true},{"key":"","value":"","isChecked":false}],"body":{"bodyType":"none","formdata":[{"isChecked":false,"key":"","value":""}],"urlencoded":[{"isChecked":false,"key":"","value":""}],"raw":{"data":"","lang":"json"},"binary":{"fileName":"","data":{},"contentTypeOption":"manual"},"graphql":{"query":"","variables":""}},"tests":[{"parameter":"Response Code","action":"equal","expectedValue":"200"},{"parameter":"","action":"","expectedValue":"","customParameter":"","type":""}],"setvar":[{"parameter":"","key":"","variableName":""}],"notes":"","selectedEnvironmentId":"","$loki":1},{"id":"0d6d267e-ce40-4fb2-9983-bfd6f83dd7da","url":"{{baseUrl}}/players","name":"Create Player","createdTime":"26-Jun-2026 15:43:29","method":"post","params":[{"isChecked":false,"key":"","value":""}],"pathParams":[],"auth":{"authType":"noauth","userName":"","password":"","addTo":"queryparams","showPwd":false,"tokenPrefix":"","aws":{"service":"","region":"","accessKey":"","secretAccessKey":"","sessionToken":""}},"headers":[{"key":"Accept","value":"*/*","isChecked":true},{"key":"User-Agent","value":"Flashpost","isChecked":true},{"isChecked":true,"key":"Content-Type","value":"application/json","isFixed":false},{"key":"","value":"","isChecked":false}],"body":{"bodyType":"raw","formdata":[{"isChecked":false,"key":"","value":""}],"urlencoded":[{"isChecked":false,"key":"","value":""}],"raw":{"data":"{\n    \"username\": \"bob\",\n    \"region\": \"EU\"\n}","lang":"json"},"binary":{"fileName":"","data":{},"contentTypeOption":"manual"},"graphql":{"query":"","variables":""}},"tests":[{"parameter":"","action":"","expectedValue":""}],"setvar":[{"parameter":"","key":"","variableName":""}],"notes":"","selectedEnvironmentId":"","$loki":2},{"id":"75403b63-46b8-4c6f-a3ce-4fc31e2c2848","url":"{{baseUrl}}/players/55113106-39f5-4643-830c-ce66e0d3c862","name":"Get Player","createdTime":"26-Jun-2026 21:31:36","method":"get","params":[{"isChecked":false,"key":"","value":""}],"pathParams":[],"auth":{"authType":"noauth","userName":"","password":"","addTo":"queryparams","showPwd":false,"tokenPrefix":"","aws":{"service":"","region":"","accessKey":"","secretAccessKey":"","sessionToken":""}},"headers":[{"key":"Accept","value":"*/*","isChecked":true},{"key":"User-Agent","value":"Flashpost","isChecked":true},{"key":"","value":"","isChecked":false}],"body":{"bodyType":"none","formdata":[{"isChecked":false,"key":"","value":""}],"urlencoded":[{"isChecked":false,"key":"","value":""}],"raw":{"data":"","lang":"json"},"binary":{"fileName":"","data":{},"contentTypeOption":"manual"},"graphql":{"query":"","variables":""}},"tests":[{"parameter":"","action":"","expectedValue":""}],"setvar":[{"parameter":"","key":"","variableName":""}],"notes":"","selectedEnvironmentId":"","$loki":3}],"idIndex":[1,2,3],"binaryIndices":{"id":{"name":"id","dirty":false,"values":[1,2,0]}},"constraints":null,"uniqueNames":["id"],"transforms":{},"objType":"apiRequests","dirty":false,"cachedIndex":null,"cachedBinaryIndex":null,"cachedData":null,"adaptiveBinaryIndices":true,"transactional":false,"cloneObjects":false,"cloneMethod":"parse-stringify","asyncListeners":false,"disableMeta":true,"disableChangesApi":true,"disableDeltaChangesApi":true,"autoupdate":true,"serializableIndices":true,"disableFreeze":true,"ttl":null,"maxId":3,"DynamicViews":[],"events":{"insert":[],"update":[],"pre-insert":[],"pre-update":[],"close":[],"flushbuffer":[],"error":[],"delete":[null],"warning":[null]},"changes":[],"dirtyIds":[],"isIncremental":false}],"databaseVersion":1.5,"engineVersion":1.5,"autosave":false,"autosaveInterval":5000,"autosaveHandle":null,"throttledSaves":true,"options":{"adapter":null,"serializationMethod":"normal","destructureDelimiter":"$<\n"},"persistenceMethod":"adapter","persistenceAdapter":null,"verbose":false,"events":{"init":[null],"loaded":[],"flushChanges":[],"close":[],"changes":[],"warning":[]},"ENV":"NODEJS","isIncremental":false}
+{
+  "filename": "/Users/muneale/Documents/projects/mune/Multiplayer-Leaderboard-Engine/flashpost/Flashpost-tests/flashpost.db",
+  "collections": [
+    {
+      "name": "apiRequests",
+      "data": [
+        {
+          "id": "b844016d-0bd9-41cc-ac4e-b84111e05246",
+          "url": "{{baseUrl}}/health",
+          "name": "Health Check",
+          "createdTime": "26-Jun-2026 15:42:46",
+          "method": "get",
+          "params": [
+            {
+              "isChecked": false,
+              "key": "",
+              "value": ""
+            }
+          ],
+          "pathParams": [],
+          "auth": {
+            "authType": "noauth",
+            "userName": "",
+            "password": "",
+            "addTo": "queryparams",
+            "showPwd": false,
+            "tokenPrefix": "",
+            "aws": {
+              "service": "",
+              "region": "",
+              "accessKey": "",
+              "secretAccessKey": "",
+              "sessionToken": ""
+            }
+          },
+          "headers": [
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "isChecked": true
+            },
+            {
+              "key": "User-Agent",
+              "value": "Flashpost",
+              "isChecked": true
+            },
+            {
+              "key": "",
+              "value": "",
+              "isChecked": false
+            }
+          ],
+          "body": {
+            "bodyType": "none",
+            "formdata": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "urlencoded": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "raw": {
+              "data": "",
+              "lang": "json"
+            },
+            "binary": {
+              "fileName": "",
+              "data": {},
+              "contentTypeOption": "manual"
+            },
+            "graphql": {
+              "query": "",
+              "variables": ""
+            }
+          },
+          "tests": [
+            {
+              "parameter": "Response Code",
+              "action": "equal",
+              "expectedValue": "200"
+            },
+            {
+              "parameter": "",
+              "action": "",
+              "expectedValue": "",
+              "customParameter": "",
+              "type": ""
+            }
+          ],
+          "setvar": [
+            {
+              "parameter": "",
+              "key": "",
+              "variableName": ""
+            }
+          ],
+          "notes": "",
+          "selectedEnvironmentId": "",
+          "$loki": 1
+        },
+        {
+          "id": "0d6d267e-ce40-4fb2-9983-bfd6f83dd7da",
+          "url": "{{baseUrl}}/players",
+          "name": "Create Player",
+          "createdTime": "26-Jun-2026 15:43:29",
+          "method": "post",
+          "params": [
+            {
+              "isChecked": false,
+              "key": "",
+              "value": ""
+            }
+          ],
+          "pathParams": [],
+          "auth": {
+            "authType": "noauth",
+            "userName": "",
+            "password": "",
+            "addTo": "queryparams",
+            "showPwd": false,
+            "tokenPrefix": "",
+            "aws": {
+              "service": "",
+              "region": "",
+              "accessKey": "",
+              "secretAccessKey": "",
+              "sessionToken": ""
+            }
+          },
+          "headers": [
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "isChecked": true
+            },
+            {
+              "key": "User-Agent",
+              "value": "Flashpost",
+              "isChecked": true
+            },
+            {
+              "isChecked": true,
+              "key": "Content-Type",
+              "value": "application/json",
+              "isFixed": false
+            },
+            {
+              "key": "",
+              "value": "",
+              "isChecked": false
+            }
+          ],
+          "body": {
+            "bodyType": "raw",
+            "formdata": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "urlencoded": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "raw": {
+              "data": "{\n    \"username\": \"bob\",\n    \"region\": \"EU\"\n}",
+              "lang": "json"
+            },
+            "binary": {
+              "fileName": "",
+              "data": {},
+              "contentTypeOption": "manual"
+            },
+            "graphql": {
+              "query": "",
+              "variables": ""
+            }
+          },
+          "tests": [
+            {
+              "parameter": "",
+              "action": "",
+              "expectedValue": ""
+            }
+          ],
+          "setvar": [
+            {
+              "parameter": "",
+              "key": "",
+              "variableName": ""
+            }
+          ],
+          "notes": "",
+          "selectedEnvironmentId": "",
+          "$loki": 2
+        },
+        {
+          "id": "75403b63-46b8-4c6f-a3ce-4fc31e2c2848",
+          "url": "{{baseUrl}}/players/55113106-39f5-4643-830c-ce66e0d3c862",
+          "name": "Get Player",
+          "createdTime": "26-Jun-2026 21:31:36",
+          "method": "get",
+          "params": [
+            {
+              "isChecked": false,
+              "key": "",
+              "value": ""
+            }
+          ],
+          "pathParams": [],
+          "auth": {
+            "authType": "noauth",
+            "userName": "",
+            "password": "",
+            "addTo": "queryparams",
+            "showPwd": false,
+            "tokenPrefix": "",
+            "aws": {
+              "service": "",
+              "region": "",
+              "accessKey": "",
+              "secretAccessKey": "",
+              "sessionToken": ""
+            }
+          },
+          "headers": [
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "isChecked": true
+            },
+            {
+              "key": "User-Agent",
+              "value": "Flashpost",
+              "isChecked": true
+            },
+            {
+              "key": "",
+              "value": "",
+              "isChecked": false
+            }
+          ],
+          "body": {
+            "bodyType": "none",
+            "formdata": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "urlencoded": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "raw": {
+              "data": "",
+              "lang": "json"
+            },
+            "binary": {
+              "fileName": "",
+              "data": {},
+              "contentTypeOption": "manual"
+            },
+            "graphql": {
+              "query": "",
+              "variables": ""
+            }
+          },
+          "tests": [
+            {
+              "parameter": "",
+              "action": "",
+              "expectedValue": ""
+            }
+          ],
+          "setvar": [
+            {
+              "parameter": "",
+              "key": "",
+              "variableName": ""
+            }
+          ],
+          "notes": "",
+          "selectedEnvironmentId": "",
+          "$loki": 3
+        },
+        {
+          "id": "f4c8b2d1-0a7e-4567-b890-8e5f0d1c2a34",
+          "url": "{{scoreBaseUrl}}/scores",
+          "name": "Submit Score",
+          "createdTime": "26-Jun-2026 22:00:00",
+          "method": "post",
+          "params": [
+            {
+              "isChecked": false,
+              "key": "",
+              "value": ""
+            }
+          ],
+          "pathParams": [],
+          "auth": {
+            "authType": "noauth",
+            "userName": "",
+            "password": "",
+            "addTo": "queryparams",
+            "showPwd": false,
+            "tokenPrefix": "",
+            "aws": {
+              "service": "",
+              "region": "",
+              "accessKey": "",
+              "secretAccessKey": "",
+              "sessionToken": ""
+            }
+          },
+          "headers": [
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "isChecked": true
+            },
+            {
+              "key": "User-Agent",
+              "value": "Flashpost",
+              "isChecked": true
+            },
+            {
+              "isChecked": true,
+              "key": "Content-Type",
+              "value": "application/json",
+              "isFixed": false
+            },
+            {
+              "key": "",
+              "value": "",
+              "isChecked": false
+            }
+          ],
+          "body": {
+            "bodyType": "raw",
+            "formdata": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "urlencoded": [
+              {
+                "isChecked": false,
+                "key": "",
+                "value": ""
+              }
+            ],
+            "raw": {
+              "data": "{\n    \"player_id\": \"{{playerId}}\",\n    \"game_id\": \"{{gameId}}\",\n    \"score\": 9500\n}",
+              "lang": "json"
+            },
+            "binary": {
+              "fileName": "",
+              "data": {},
+              "contentTypeOption": "manual"
+            },
+            "graphql": {
+              "query": "",
+              "variables": ""
+            }
+          },
+          "tests": [
+            {
+              "parameter": "Response Code",
+              "action": "equal",
+              "expectedValue": "202"
+            },
+            {
+              "parameter": "",
+              "action": "",
+              "expectedValue": "",
+              "customParameter": "",
+              "type": ""
+            }
+          ],
+          "setvar": [
+            {
+              "parameter": "",
+              "key": "",
+              "variableName": ""
+            }
+          ],
+          "notes": "",
+          "selectedEnvironmentId": "",
+          "$loki": 4
+        }
+      ],
+      "idIndex": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "binaryIndices": {
+        "id": {
+          "name": "id",
+          "dirty": false,
+          "values": [
+            1,
+            2,
+            0,
+            3
+          ]
+        }
+      },
+      "constraints": null,
+      "uniqueNames": [
+        "id"
+      ],
+      "transforms": {},
+      "objType": "apiRequests",
+      "dirty": false,
+      "cachedIndex": null,
+      "cachedBinaryIndex": null,
+      "cachedData": null,
+      "adaptiveBinaryIndices": true,
+      "transactional": false,
+      "cloneObjects": false,
+      "cloneMethod": "parse-stringify",
+      "asyncListeners": false,
+      "disableMeta": true,
+      "disableChangesApi": true,
+      "disableDeltaChangesApi": true,
+      "autoupdate": true,
+      "serializableIndices": true,
+      "disableFreeze": true,
+      "ttl": null,
+      "maxId": 4,
+      "DynamicViews": [],
+      "events": {
+        "insert": [],
+        "update": [],
+        "pre-insert": [],
+        "pre-update": [],
+        "close": [],
+        "flushbuffer": [],
+        "error": [],
+        "delete": [
+          null
+        ],
+        "warning": [
+          null
+        ]
+      },
+      "changes": [],
+      "dirtyIds": [],
+      "isIncremental": false
+    }
+  ],
+  "databaseVersion": 1.5,
+  "engineVersion": 1.5,
+  "autosave": false,
+  "autosaveInterval": 5000,
+  "autosaveHandle": null,
+  "throttledSaves": true,
+  "options": {
+    "adapter": null,
+    "serializationMethod": "normal",
+    "destructureDelimiter": "$<\n"
+  },
+  "persistenceMethod": "adapter",
+  "persistenceAdapter": null,
+  "verbose": false,
+  "events": {
+    "init": [
+      null
+    ],
+    "loaded": [],
+    "flushChanges": [],
+    "close": [],
+    "changes": [],
+    "warning": []
+  },
+  "ENV": "NODEJS",
+  "isIncremental": false
+}

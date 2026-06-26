@@ -37,6 +37,31 @@
       "buildFlags": "-tags integration",
       "args": ["-v", "-count=1", "-timeout", "120s"],
       "preLaunchTask": "infra: start"
+    },
+    {
+      "name": "score-service",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/services/score-service/cmd",
+      "cwd": "${workspaceFolder}/services/score-service",
+      "env": {
+        "PORT": "3002",
+        "KAFKA_BROKERS": "localhost:9094",
+        "KAFKA_TOPIC": "score-events",
+        "REDIS_ADDR": "localhost:6379",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317"
+      },
+      "preLaunchTask": "infra: start with kafka"
+    },
+    {
+      "name": "score-service: unit tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/score-service/internal/handler",
+      "cwd": "${workspaceFolder}/services/score-service",
+      "args": ["-v", "-count=1"]
     }
   ]
 }

@@ -30,6 +30,16 @@
         "panel": "shared"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "infra: start with kafka",
+      "type": "shell",
+      "command": "docker compose up postgres redis kafka kafka-setup -d --wait",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     }
   ]
 }
