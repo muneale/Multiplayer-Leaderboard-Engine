@@ -62,6 +62,32 @@
       "program": "${workspaceFolder}/services/score-service/internal/handler",
       "cwd": "${workspaceFolder}/services/score-service",
       "args": ["-v", "-count=1"]
+    },
+    {
+      "name": "ranking-service",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/services/ranking-service/cmd",
+      "cwd": "${workspaceFolder}/services/ranking-service",
+      "env": {
+        "PORT": "3003",
+        "KAFKA_BROKERS": "localhost:9094",
+        "KAFKA_TOPIC": "score-events",
+        "KAFKA_GROUP_ID": "ranking-service",
+        "REDIS_ADDR": "localhost:6379",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317"
+      },
+      "preLaunchTask": "infra: start with kafka"
+    },
+    {
+      "name": "ranking-service: unit tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/ranking-service/internal/ranking",
+      "cwd": "${workspaceFolder}/services/ranking-service",
+      "args": ["-v", "-count=1"]
     }
   ]
 }
