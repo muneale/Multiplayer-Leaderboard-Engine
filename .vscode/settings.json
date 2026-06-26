@@ -1,0 +1,16 @@
+{
+  // Go
+  "editor.formatOnSave": true,
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "go.toolsManagement.autoUpdate": true,
+  "go.testFlags": ["-v", "-count=1"],
+
+  // Flashpost — store collection data in this workspace
+  "flashpost.saveDataToWorkspace": true,
+  "flashpost.workspaceDataRelativePath": "flashpost"
+}

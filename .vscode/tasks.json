@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "infra: start",
+      "type": "shell",
+      "command": "docker compose up postgres redis -d --wait",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "infra: stop",
+      "type": "shell",
+      "command": "docker compose down",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "infra: start with otel",
+      "type": "shell",
+      "command": "docker compose up postgres redis otel-collector -d --wait",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
