@@ -18,8 +18,12 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
+    volumes:
+      - ./infra/redis/redis.conf:/etc/redis/redis.conf
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -124,6 +128,30 @@ services:
       timeout: 5s
       retries: 5
 
+  ranking-service:
+    build:
+      context: ./services/ranking-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      KAFKA_BROKERS: "kafka:9092"
+      KAFKA_TOPIC: "score-events"
+      KAFKA_GROUP_ID: "ranking-service"
+      REDIS_ADDR: "redis:6379"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector:4317"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka-setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   kafka_data:
+  redis_data:
