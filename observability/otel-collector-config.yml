@@ -7,14 +7,18 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 exporters:
-  debug:
-    verbosity: detailed
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: "0.0.0.0:8889"
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [jaeger]
     metrics:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [prometheus]

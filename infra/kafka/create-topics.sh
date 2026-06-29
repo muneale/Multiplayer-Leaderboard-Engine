@@ -3,6 +3,14 @@ set -eu
 
 KAFKA_ADDR="${KAFKA_ADDR:-localhost:9092}"
 REPLICATION_FACTOR="${REPLICATION_FACTOR:-1}"
+export PATH="$PATH:/opt/kafka/bin"
+
+# Wait until Kafka is responsive to topic queries
+echo "Waiting for Kafka at $KAFKA_ADDR..."
+until kafka-topics.sh --bootstrap-server "$KAFKA_ADDR" --list >/dev/null 2>&1; do
+  sleep 1
+done
+echo "Kafka is ready."
 
 create_topic() {
   topic="$1"

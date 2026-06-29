@@ -22,9 +22,8 @@ type KafkaPublisher struct {
 func New(brokers []string, topic string) (*KafkaPublisher, error) {
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
-		// Wait for the partition leader to acknowledge before returning.
-		// Balances durability and latency for a single-broker setup.
-		kgo.RequiredAcks(kgo.LeaderAck()),
+		// Wait for all in-sync replicas to acknowledge (required for idempotent producer)
+		kgo.RequiredAcks(kgo.AllISRAcks()),
 		kgo.ProducerBatchCompression(kgo.SnappyCompression()),
 	)
 	if err != nil {
