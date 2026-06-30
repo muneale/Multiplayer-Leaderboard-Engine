@@ -3,6 +3,7 @@ x-logging: &default-logging
   options:
     max-size: "10m"
     max-file: "3"
+    tag: "{{.Name}}"
 
 services:
   postgres:
@@ -41,9 +42,11 @@ services:
   otel-collector:
     logging: *default-logging
     image: otel/opentelemetry-collector-contrib:0.154.0
+    user: "0:0"
     command: ["--config=/etc/otel-collector-config.yml"]
     volumes:
       - ./observability/otel-collector-config.yml:/etc/otel-collector-config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
       - "4317:4317"
       - "4318:4318"
@@ -246,7 +249,7 @@ services:
 
   jaeger:
     logging: *default-logging
-    image: jaegertracing/all-in-one:2.19.0
+    image: jaegertracing/all-in-one:1.76.0
     ports:
       - "16686:16686"
     environment:
@@ -262,6 +265,15 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
 
+  loki:
+    logging: *default-logging
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+
   grafana:
     logging: *default-logging
     image: grafana/grafana:13.1.0
@@ -272,9 +284,11 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
       - jaeger
+      - loki
 
   apisix:
     logging: *default-logging

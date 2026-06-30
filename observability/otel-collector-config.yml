@@ -5,20 +5,61 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  file_log:
+    include:
+      - /var/lib/docker/containers/*/*-json.log
+    start_at: beginning
+    operators:
+      # Parse the outer Docker JSON wrapper
+      - type: json_parser
+        timestamp:
+          parse_from: attributes.time
+          layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+        body: attributes.log
+
+processors:
+  batch:
+  transform:
+    log_statements:
+      - context: log
+        statements:
+          # If the inner body is a JSON string (emitted by Go services), parse it.
+          - merge_maps(log.attributes, ParseJSON(log.body), "upsert") where IsString(log.body) and IsMatch(log.body, "^\\{")
+          # If the inner JSON had a msg/message field, set it as the body.
+          - set(log.body, log.attributes["msg"]) where log.attributes["msg"] != nil
+          - set(log.body, log.attributes["message"]) where log.attributes["message"] != nil
+          # Set service.name resource attribute from the docker tag attribute
+          - set(resource.attributes["service.name"], log.attributes["attrs"]["tag"]) where log.attributes["attrs"] != nil and log.attributes["attrs"]["tag"] != nil
+          - set(resource.attributes["service.name"], "unknown-service") where resource.attributes["service.name"] == nil
+          # Set log level / severity
+          - set(log.severity_text, log.attributes["level"]) where log.attributes["level"] != nil
 
 exporters:
-  jaeger:
-    endpoint: jaeger:14250
+  otlp/jaeger:
+    endpoint: jaeger:4317
     tls:
       insecure: true
   prometheus:
     endpoint: "0.0.0.0:8889"
+  otlp_http/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
 
 service:
+  telemetry:
+    logs:
+      level: "debug"
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [jaeger]
+      processors: [batch]
+      exporters: [otlp/jaeger]
     metrics:
       receivers: [otlp]
+      processors: [batch]
       exporters: [prometheus]
+    logs:
+      receivers: [otlp, file_log]
+      processors: [batch, transform]
+      exporters: [otlp_http/loki]
