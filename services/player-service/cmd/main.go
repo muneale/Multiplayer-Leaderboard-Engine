@@ -46,16 +46,15 @@ func main() {
 		log.Error("failed to open database connection", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
 
 	if err := waitForDB(ctx, db, log); err != nil {
 		log.Error("database not ready", "error", err)
+		db.Close()
 		os.Exit(1)
 	}
 	log.Info("database ready")
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	defer rdb.Close()
 
 	repo := repository.NewPlayerRepository(db, rdb)
 	h := handler.NewPlayerHandler(repo)
@@ -80,12 +79,33 @@ func main() {
 	}()
 
 	<-ctx.Done()
-	log.Info("shutdown signal received")
+	log.Info("shutdown signal received, starting graceful shutdown")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	// 1. Shut down HTTP Server (stops accepting new connections, waits for active requests)
+	log.Info("shutting down HTTP server...")
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("graceful shutdown failed", "error", err)
+		log.Error("graceful server shutdown failed", "error", err)
+	} else {
+		log.Info("HTTP server stopped successfully")
+	}
+
+	// 2. Close Redis client
+	log.Info("closing Redis client...")
+	if err := rdb.Close(); err != nil {
+		log.Error("failed to close Redis client", "error", err)
+	} else {
+		log.Info("Redis client closed successfully")
+	}
+
+	// 3. Close Postgres DB connection
+	log.Info("closing Postgres database connections...")
+	if err := db.Close(); err != nil {
+		log.Error("failed to close database connection", "error", err)
+	} else {
+		log.Info("Postgres database connection closed successfully")
 	}
 }
 

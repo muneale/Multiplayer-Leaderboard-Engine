@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -44,15 +45,14 @@ func main() {
 		log.Error("failed to open postgres connection", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
 
 	if err := waitForDB(ctx, db, log); err != nil {
 		log.Error("database not ready", "error", err)
+		db.Close()
 		os.Exit(1)
 	}
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	defer rdb.Close()
 
 	pg := snapshotter.NewPostgresStore(db)
 	rr := snapshotter.NewRedisLeaderboardReader(rdb)
@@ -61,6 +61,8 @@ func main() {
 	sn, err := snapshotter.New(pg, rr, pg, log, meter)
 	if err != nil {
 		log.Error("failed to create snapshotter", "error", err)
+		rdb.Close()
+		db.Close()
 		os.Exit(1)
 	}
 
@@ -70,9 +72,9 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 	srv := &http.Server{
-		Addr:        ":" + cfg.Port,
-		Handler:     mux,
-		ReadTimeout: 5 * time.Second,
+		Addr:         ":" + cfg.Port,
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
 	go func() {
@@ -82,16 +84,46 @@ func main() {
 		}
 	}()
 
+	var wg sync.WaitGroup
 	log.Info("starting snapshot scheduler", "interval", cfg.SnapshotInterval.String())
-	go sn.Run(ctx, cfg.SnapshotInterval)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sn.Run(ctx, cfg.SnapshotInterval)
+	}()
 
 	<-ctx.Done()
-	log.Info("shutdown signal received")
+	log.Info("shutdown signal received, starting graceful shutdown")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 1. Shut down Health HTTP server
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	log.Info("shutting down health HTTP server...")
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("health server shutdown error", "error", err)
+	} else {
+		log.Info("health server stopped successfully")
+	}
+
+	// 2. Wait for snapshot scheduler loop to exit (since ctx is cancelled, it will stop and return)
+	log.Info("waiting for snapshot scheduler to stop...")
+	wg.Wait()
+	log.Info("snapshot scheduler stopped successfully")
+
+	// 3. Close Redis client
+	log.Info("closing Redis client...")
+	if err := rdb.Close(); err != nil {
+		log.Error("failed to close Redis client", "error", err)
+	} else {
+		log.Info("Redis client closed successfully")
+	}
+
+	// 4. Close Postgres DB connection
+	log.Info("closing Postgres database connections...")
+	if err := db.Close(); err != nil {
+		log.Error("failed to close database connection", "error", err)
+	} else {
+		log.Info("Postgres database connection closed successfully")
 	}
 }
 

@@ -41,14 +41,13 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	defer rdb.Close()
 
 	pub, err := publisher.New(cfg.KafkaBrokers, cfg.KafkaTopic)
 	if err != nil {
 		log.Error("failed to create kafka publisher", "error", err)
+		rdb.Close()
 		os.Exit(1)
 	}
-	defer pub.Close()
 
 	val := validator.NewRedisPlayerValidator(rdb)
 
@@ -56,6 +55,8 @@ func main() {
 	h, err := handler.New(val, pub, meter)
 	if err != nil {
 		log.Error("failed to create score handler", "error", err)
+		pub.Close()
+		rdb.Close()
 		os.Exit(1)
 	}
 
@@ -79,11 +80,29 @@ func main() {
 	}()
 
 	<-ctx.Done()
-	log.Info("shutdown signal received")
+	log.Info("shutdown signal received, starting graceful shutdown")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	// 1. Shut down HTTP Server
+	log.Info("shutting down HTTP server...")
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("graceful shutdown failed", "error", err)
+		log.Error("graceful server shutdown failed", "error", err)
+	} else {
+		log.Info("HTTP server stopped successfully")
+	}
+
+	// 2. Close Kafka publisher (flushes buffered messages)
+	log.Info("closing Kafka publisher...")
+	pub.Close()
+	log.Info("Kafka publisher closed successfully")
+
+	// 3. Close Redis client
+	log.Info("closing Redis client...")
+	if err := rdb.Close(); err != nil {
+		log.Error("failed to close Redis client", "error", err)
+	} else {
+		log.Info("Redis client closed successfully")
 	}
 }

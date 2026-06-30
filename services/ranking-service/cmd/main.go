@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -39,22 +40,22 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	defer rdb.Close()
 
 	store := ranking.NewRedisRankStore(rdb)
 	meter := otel.GetMeterProvider().Meter(cfg.ServiceName)
 	processor, err := ranking.NewEventProcessor(store, meter)
 	if err != nil {
 		log.Error("failed to create event processor", "error", err)
+		rdb.Close()
 		os.Exit(1)
 	}
 
 	cons, err := consumer.New(cfg.KafkaBrokers, cfg.KafkaTopic, cfg.KafkaGroupID, processor, log)
 	if err != nil {
 		log.Error("failed to create kafka consumer", "error", err)
+		rdb.Close()
 		os.Exit(1)
 	}
-	defer cons.Close()
 
 	// Minimal HTTP server — Ranking Service has no API but exposes /health
 	// so Docker Compose and orchestrators can confirm the process is alive.
@@ -75,15 +76,42 @@ func main() {
 		}
 	}()
 
+	var wg sync.WaitGroup
 	log.Info("starting kafka consumer", "topic", cfg.KafkaTopic, "group", cfg.KafkaGroupID)
-	go cons.Run(ctx)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		cons.Run(ctx)
+	}()
 
 	<-ctx.Done()
-	log.Info("shutdown signal received")
+	log.Info("shutdown signal received, starting graceful shutdown")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 1. Shut down Health HTTP server
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	log.Info("shutting down health HTTP server...")
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("health server shutdown error", "error", err)
+	} else {
+		log.Info("health server stopped successfully")
+	}
+
+	// 2. Wait for Kafka consumer run loop to exit (since ctx is cancelled, it will stop polling and return)
+	log.Info("waiting for Kafka consumer run loop to stop...")
+	wg.Wait()
+	log.Info("Kafka consumer run loop stopped successfully")
+
+	// 3. Close Kafka consumer client
+	log.Info("closing Kafka consumer client...")
+	cons.Close()
+	log.Info("Kafka consumer client closed successfully")
+
+	// 4. Close Redis client
+	log.Info("closing Redis client...")
+	if err := rdb.Close(); err != nil {
+		log.Error("failed to close Redis client", "error", err)
+	} else {
+		log.Info("Redis client closed successfully")
 	}
 }
