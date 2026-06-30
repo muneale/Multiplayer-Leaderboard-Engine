@@ -1,5 +1,12 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
+    logging: *default-logging
     image: postgres:16.11-alpine
     environment:
       POSTGRES_DB: leaderboard
@@ -17,6 +24,7 @@ services:
       retries: 10
 
   redis:
+    logging: *default-logging
     image: redis:7.4.7-alpine
     command: ["redis-server", "/etc/redis/redis.conf"]
     ports:
@@ -31,6 +39,7 @@ services:
       retries: 5
 
   otel-collector:
+    logging: *default-logging
     image: otel/opentelemetry-collector-contrib:0.154.0
     command: ["--config=/etc/otel-collector-config.yml"]
     volumes:
@@ -41,6 +50,7 @@ services:
       - "8888:8888"
 
   kafka:
+    logging: *default-logging
     image: apache/kafka:4.3.1
     ports:
       - "9094:9094"
@@ -72,6 +82,7 @@ services:
       retries: 10
 
   kafka-setup:
+    logging: *default-logging
     image: apache/kafka:4.3.1
     depends_on:
       kafka:
@@ -83,6 +94,7 @@ services:
       KAFKA_ADDR: "kafka:9092"
 
   kafka-ui:
+    logging: *default-logging
     image: provectuslabs/kafka-ui:v0.7.2
     ports:
       - "8090:8080"
@@ -94,6 +106,7 @@ services:
         condition: service_healthy
 
   schema-registry:
+    logging: *default-logging
     image: confluentinc/cp-schema-registry:7.6.0
     ports:
       - "8081:8081"
@@ -111,6 +124,7 @@ services:
       retries: 10
 
   player-service:
+    logging: *default-logging
     build:
       context: ./services/player-service
     ports:
@@ -136,6 +150,7 @@ services:
       retries: 5
 
   score-service:
+    logging: *default-logging
     build:
       context: ./services/score-service
     ports:
@@ -161,6 +176,7 @@ services:
       retries: 5
 
   ranking-service:
+    logging: *default-logging
     build:
       context: ./services/ranking-service
     ports:
@@ -187,6 +203,7 @@ services:
       retries: 5
 
   query-service:
+    logging: *default-logging
     build:
       context: ./services/query-service
     ports:
@@ -205,6 +222,7 @@ services:
       retries: 5
 
   snapshot-service:
+    logging: *default-logging
     build:
       context: ./services/snapshot-service
     ports:
@@ -227,6 +245,7 @@ services:
       retries: 5
 
   jaeger:
+    logging: *default-logging
     image: jaegertracing/all-in-one:2.19.0
     ports:
       - "16686:16686"
@@ -234,6 +253,7 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
 
   prometheus:
+    logging: *default-logging
     image: prom/prometheus:v3.12.0
     ports:
       - "9090:9090"
@@ -243,6 +263,7 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
 
   grafana:
+    logging: *default-logging
     image: grafana/grafana:13.1.0
     ports:
       - "3000:3000"
@@ -256,6 +277,7 @@ services:
       - jaeger
 
   apisix:
+    logging: *default-logging
     image: apache/apisix:3.17.0-debian
     ports:
       - "8080:9080"
