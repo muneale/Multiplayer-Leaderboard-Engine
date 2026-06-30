@@ -15,15 +15,17 @@ import (
 
 	"ranking-service/internal/domain"
 	"ranking-service/internal/ranking"
+	"ranking-service/internal/registry"
 )
 
 type KafkaConsumer struct {
-	client    *kgo.Client
-	processor *ranking.EventProcessor
-	log       *slog.Logger
+	client         *kgo.Client
+	processor      *ranking.EventProcessor
+	log            *slog.Logger
+	registryClient *registry.SchemaRegistryClient
 }
 
-func New(brokers []string, topic, groupID string, processor *ranking.EventProcessor, log *slog.Logger) (*KafkaConsumer, error) {
+func New(brokers []string, topic, groupID string, registryURL string, processor *ranking.EventProcessor, log *slog.Logger) (*KafkaConsumer, error) {
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
 		kgo.ConsumerGroup(groupID),
@@ -35,7 +37,18 @@ func New(brokers []string, topic, groupID string, processor *ranking.EventProces
 	if err != nil {
 		return nil, fmt.Errorf("new kafka consumer client: %w", err)
 	}
-	return &KafkaConsumer{client: client, processor: processor, log: log}, nil
+
+	var regClient *registry.SchemaRegistryClient
+	if registryURL != "" {
+		regClient = registry.NewClient(registryURL)
+	}
+
+	return &KafkaConsumer{
+		client:         client,
+		processor:      processor,
+		log:            log,
+		registryClient: regClient,
+	}, nil
 }
 
 // Run polls Kafka until ctx is cancelled. It commits offsets only after all
@@ -97,13 +110,32 @@ func (c *KafkaConsumer) handleRecord(ctx context.Context, r *kgo.Record) error {
 	)
 
 	var event domain.ScoreSubmittedEvent
-	if err := json.Unmarshal(r.Value, &event); err != nil {
-		// Malformed message — skip and let the consumer advance.
-		// Retrying a corrupt payload will never succeed.
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "malformed event")
-		c.log.Error("malformed kafka record, skipping", "topic", r.Topic, "offset", r.Offset, "error", err)
-		return nil
+	var decoded bool
+	var err error
+
+	if c.registryClient != nil {
+		decoded, err = c.registryClient.DecodeAvro(r.Value, &event)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "malformed avro event")
+			c.log.Error("malformed avro record, skipping", "topic", r.Topic, "offset", r.Offset, "error", err)
+			return nil
+		}
+		if decoded {
+			span.SetAttributes(attribute.String("messaging.payload.format", "avro"))
+		}
+	}
+
+	if !decoded {
+		if err := json.Unmarshal(r.Value, &event); err != nil {
+			// Malformed message — skip and let the consumer advance.
+			// Retrying a corrupt payload will never succeed.
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "malformed json event")
+			c.log.Error("malformed json record, skipping", "topic", r.Topic, "offset", r.Offset, "error", err)
+			return nil
+		}
+		span.SetAttributes(attribute.String("messaging.payload.format", "json"))
 	}
 
 	if err := c.processor.Process(ctx, &event); err != nil {

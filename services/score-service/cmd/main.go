@@ -42,7 +42,7 @@ func main() {
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
 
-	pub, err := publisher.New(cfg.KafkaBrokers, cfg.KafkaTopic)
+	pub, err := publisher.New(cfg.KafkaBrokers, cfg.KafkaTopic, cfg.SchemaRegistryURL)
 	if err != nil {
 		log.Error("failed to create kafka publisher", "error", err)
 		rdb.Close()

@@ -50,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cons, err := consumer.New(cfg.KafkaBrokers, cfg.KafkaTopic, cfg.KafkaGroupID, processor, log)
+	cons, err := consumer.New(cfg.KafkaBrokers, cfg.KafkaTopic, cfg.KafkaGroupID, cfg.SchemaRegistryURL, processor, log)
 	if err != nil {
 		log.Error("failed to create kafka consumer", "error", err)
 		rdb.Close()
