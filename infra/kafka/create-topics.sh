@@ -33,3 +33,4 @@ create_topic() {
 }
 
 create_topic "score-events" 3
+create_topic "player-events" 3

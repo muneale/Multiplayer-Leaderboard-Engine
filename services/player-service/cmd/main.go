@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 
 	"player-service/internal/config"
 	"player-service/internal/handler"
+	"player-service/internal/outbox"
 	"player-service/internal/repository"
 	"player-service/internal/telemetry"
 )
@@ -56,6 +58,15 @@ func main() {
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
 
+	// Create Outbox Relay to process dual-write events asynchronously and reliably
+	relay, err := outbox.NewRelay(db, cfg.KafkaBrokers, cfg.KafkaTopic, log)
+	if err != nil {
+		log.Error("failed to create outbox relay", "error", err)
+		rdb.Close()
+		db.Close()
+		os.Exit(1)
+	}
+
 	repo := repository.NewPlayerRepository(db, rdb)
 	h := handler.NewPlayerHandler(repo)
 
@@ -78,6 +89,13 @@ func main() {
 		}
 	}()
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		relay.Run(ctx)
+	}()
+
 	<-ctx.Done()
 	log.Info("shutdown signal received, starting graceful shutdown")
 
@@ -92,7 +110,17 @@ func main() {
 		log.Info("HTTP server stopped successfully")
 	}
 
-	// 2. Close Redis client
+	// 2. Wait for background Outbox Relay worker to stop
+	log.Info("waiting for outbox relay worker to stop...")
+	wg.Wait()
+	log.Info("outbox relay worker stopped successfully")
+
+	// 3. Close Outbox Relay Kafka client
+	log.Info("closing outbox relay Kafka client...")
+	relay.Close()
+	log.Info("outbox relay Kafka client closed successfully")
+
+	// 4. Close Redis client
 	log.Info("closing Redis client...")
 	if err := rdb.Close(); err != nil {
 		log.Error("failed to close Redis client", "error", err)
@@ -100,7 +128,7 @@ func main() {
 		log.Info("Redis client closed successfully")
 	}
 
-	// 3. Close Postgres DB connection
+	// 5. Close Postgres DB connection
 	log.Info("closing Postgres database connections...")
 	if err := db.Close(); err != nil {
 		log.Error("failed to close database connection", "error", err)

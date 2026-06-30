@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -38,7 +39,17 @@ func (r *PlayerRepository) Create(ctx context.Context, username, region string) 
 		regionOut sql.NullString
 	)
 
-	err := r.db.QueryRowContext(ctx,
+	// Start database transaction to ensure atomicity (Dual-Write safety)
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback() // Safe to call: no-op if committed
+
+	// 1. Insert player
+	err = tx.QueryRowContext(ctx,
 		`INSERT INTO players (username, region)
 		 VALUES ($1, NULLIF($2, ''))
 		 RETURNING id, region, created_at`,
@@ -48,6 +59,36 @@ func (r *PlayerRepository) Create(ctx context.Context, username, region string) 
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return nil, fmt.Errorf("insert player: %w", err)
+	}
+
+	// 2. Insert event to outbox table (atomically with the player insertion)
+	eventPayload, err := json.Marshal(map[string]interface{}{
+		"player_id":  id,
+		"username":   username,
+		"region":     regionOut.String,
+		"created_at": createdAt,
+	})
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("marshal outbox payload: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO outbox (event_type, payload) VALUES ($1, $2)`,
+		"player.created", eventPayload,
+	)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("insert outbox record: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("commit transaction: %w", err)
 	}
 
 	span.SetAttributes(attribute.String("player.id", id))
@@ -60,7 +101,6 @@ func (r *PlayerRepository) Create(ctx context.Context, username, region string) 
 	}
 
 	// Write existence key consumed by Score Service on its hot path.
-	// Non-fatal: the Score Service falls back to a DB lookup on a cache miss.
 	if err := r.redis.Set(ctx, "player:exists:"+id, "1", playerExistsTTL).Err(); err != nil {
 		span.AddEvent("redis cache write failed", trace.WithAttributes(attribute.String("error", err.Error())))
 	}

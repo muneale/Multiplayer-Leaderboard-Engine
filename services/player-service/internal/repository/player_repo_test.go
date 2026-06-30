@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +27,14 @@ CREATE TABLE IF NOT EXISTS players (
     username   VARCHAR(64) NOT NULL,
     region     VARCHAR(32),
     created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS outbox (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type VARCHAR(64) NOT NULL,
+    payload    JSONB NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    processed  BOOLEAN NOT NULL DEFAULT false,
+    processed_at TIMESTAMP
 );
 `
 
@@ -248,5 +257,40 @@ func TestFindByID_NotFound(t *testing.T) {
 	}
 	if p != nil {
 		t.Errorf("expected nil, got %+v", p)
+	}
+}
+
+func TestCreate_WritesOutboxRecord(t *testing.T) {
+	cleanPlayers(t)
+	if _, err := testDB.Exec("TRUNCATE TABLE outbox"); err != nil {
+		t.Fatalf("truncate outbox: %v", err)
+	}
+
+	repo := repository.NewPlayerRepository(testDB, testRedis)
+	ctx := context.Background()
+
+	p, err := repo.Create(ctx, "outbox-user", "EU")
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	var (
+		eventType string
+		payload   string
+		processed bool
+	)
+	err = testDB.QueryRow("SELECT event_type, payload::text, processed FROM outbox LIMIT 1").Scan(&eventType, &payload, &processed)
+	if err != nil {
+		t.Fatalf("query outbox: %v", err)
+	}
+
+	if eventType != "player.created" {
+		t.Errorf("eventType = %q, want %q", eventType, "player.created")
+	}
+	if processed {
+		t.Error("expected processed to be false")
+	}
+	if !strings.Contains(payload, p.ID) {
+		t.Errorf("expected payload to contain player ID %q, got %q", p.ID, payload)
 	}
 }
